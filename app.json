@@ -1,0 +1,15 @@
+{
+    "id": "570f9b14-fcd4-43e6-8480-4a78bb710ec5",
+    "version": "0.1.0",
+    "requiredApiVersion": "^1.1.1",
+    "iconFile": "icon.png",
+    "author": {
+        "name": "Diego Sampaio <chinello@gmail.com>",
+        "homepage": "https://github.com/sampaiodiego/rocket.chat.app-bamboohr",
+        "support": "https://github.com/sampaiodiego/rocket.chat.app-bamboohr"
+    },
+    "name": "BambooHR",
+    "nameSlug": "bamboohr",
+    "classFile": "index.ts",
+    "description": "BambooHR Integrations"
+}
