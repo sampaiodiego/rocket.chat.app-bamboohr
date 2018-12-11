@@ -1,12 +1,12 @@
-import { IHttp, ILogger } from "@rocket.chat/apps-engine/definition/accessors";
+import { IHttp, ILogger } from '@rocket.chat/apps-engine/definition/accessors';
 
 import { formatDate } from './utils';
 
-interface WhosOutParams {
+interface IWhosOutParams {
     today: Date;
     http: IHttp;
-    bambooSubdomain: String;
-    bambooToken: String;
+    bambooSubdomain: string;
+    bambooToken: string;
     logger: ILogger;
 }
 
@@ -30,15 +30,17 @@ function getItem(item, tag) {
 
 function getItems(content, type, tag) {
     const regex = new RegExp(`<item type="${ type }"[^\\0]*?<\\/item>`, 'mg');
-    const items:any = [];
+    const items: any = [];
     let item;
+
+    // tslint:disable-next-line
     while ((item = regex.exec(content)) !== null) {
         items.push(getItem(item[0], tag));
     }
     return items;
 }
 
-export async function getWhosOut({ today, http, bambooSubdomain, bambooToken, logger }: WhosOutParams): Promise<{ whosout: Array<string>, holidaysToday: Array<string>, holidaysTomorrow: Array<string> }> {
+export async function getWhosOut({ today, http, bambooSubdomain, bambooToken, logger }: IWhosOutParams): Promise<{ whosout: Array<string>, holidaysToday: Array<string>, holidaysTomorrow: Array<string> }> {
     const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
 
     const todayString = formatDate(today);
@@ -51,15 +53,15 @@ export async function getWhosOut({ today, http, bambooSubdomain, bambooToken, lo
     };
     const result = await http.get(url, options);
 
-    const content = <string>result.content;
+    const content = result.content as string;
 
-    const whosout:string[] = getItems(content, 'timeOff', 'employee')
+    const whosout: Array<string> = getItems(content, 'timeOff', 'employee')
         .filter((timeoff) => timeoff.start <= todayString)
         .map((timeoff) => timeoff.result);
-    const holidaysToday:string[] = getItems(content, 'holiday', 'holiday')
+    const holidaysToday: Array<string> = getItems(content, 'holiday', 'holiday')
         .filter((holiday) => holiday.start <= todayString)
         .map((timeoff) => timeoff.result);
-    const holidaysTomorrow:string[] = getItems(content, 'holiday', 'holiday')
+    const holidaysTomorrow: Array<string> = getItems(content, 'holiday', 'holiday')
         .filter((holiday) => holiday.end >= tomorrowString)
         .map((timeoff) => timeoff.result);
 

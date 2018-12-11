@@ -31,7 +31,7 @@ export const settings: Array<ISetting> = [
             packageValue: '',
             required: true,
             public: true,
-            i18nLabel: 'room',
+            i18nLabel: 'room_id',
             i18nDescription: 'room_description',
     },
 ];

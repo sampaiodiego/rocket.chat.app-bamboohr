@@ -1,13 +1,14 @@
+import { IHttp, IModify, IRead } from '@rocket.chat/apps-engine/definition/accessors';
 import { IApiRequest, IApiResponse } from '@rocket.chat/apps-engine/definition/api';
 import { ApiEndpoint } from '@rocket.chat/apps-engine/definition/api/ApiEndpoint';
 import { IApiEndpointInfo } from '@rocket.chat/apps-engine/definition/api/IApiEndpointInfo';
-import { IModify, IRead, IHttp } from '@rocket.chat/apps-engine/definition/accessors';
 import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
 // import { IUser } from '@rocket.chat/apps-engine/definition/users';
 
-import { AppSetting } from '../settings';
 import { getWhosOut } from '../BambooHR';
+import { AppSetting } from '../settings';
 
+import { IMessageAttachmentField } from '@rocket.chat/apps-engine/definition/messages/IMessageAttachmentField';
 import { formatDate } from '../utils';
 
 export class WhosOutEndpoint extends ApiEndpoint {
@@ -22,7 +23,7 @@ export class WhosOutEndpoint extends ApiEndpoint {
         const bambooSubdomain = await settingsReader.getValueById(AppSetting.Subdoman);
 
         const sender = await read.getUserReader().getById('rocket.cat');
-        const room = <IRoom> await read.getRoomReader().getById(await settingsReader.getValueById(AppSetting.Room));
+        const room = await read.getRoomReader().getById(await settingsReader.getValueById(AppSetting.Room)) as IRoom;
 
         const messageBuilder = await modify.getCreator().startMessage()
             .setSender(sender)
@@ -41,13 +42,13 @@ export class WhosOutEndpoint extends ApiEndpoint {
             logger: this.app.getLogger(),
         });
 
-        const fields:any[] = [];
+        const fields: Array<IMessageAttachmentField> = [];
 
         if (whosout.length > 0) {
             fields.push({
                 title: `Out today (${ formatDate(today) }):`,
                 value: whosout.join('\n'),
-                short: true
+                short: true,
             });
         }
 
@@ -55,7 +56,7 @@ export class WhosOutEndpoint extends ApiEndpoint {
             fields.push({
                 title: `Holidays today (${ formatDate(today) }):`,
                 value: holidaysToday.join('\n'),
-                short: true
+                short: true,
             });
         }
 
@@ -63,8 +64,12 @@ export class WhosOutEndpoint extends ApiEndpoint {
             fields.push({
                 title: `Holidays tomorrow (${ formatDate(tomorrow) }):`,
                 value: holidaysTomorrow.join('\n'),
-                short: true
+                short: true,
             });
+        }
+
+        if (fields.length === 0) {
+            return this.success();
         }
 
         messageBuilder.addAttachment({ fields });
