@@ -1,6 +1,6 @@
 import { IHttp, ILogger } from '@rocket.chat/apps-engine/definition/accessors';
 
-import { formatDate } from './utils';
+import { formatDate, getMonthAndDay } from './utils';
 
 interface IWhosOutParams {
     today: Date;
@@ -46,6 +46,35 @@ function getItems(content, type, tag): Array<ITimeOffItem> {
     return items;
 }
 
+export async function getBirthdays({ today, http, bambooSubdomain, bambooToken, logger }: IWhosOutParams): Promise<{ birthdays: Array<string> }> {
+    const todayString = getMonthAndDay(today);
+
+    const report = 110;
+
+    const url = `https://api.bamboohr.com/api/gateway.php/${ bambooSubdomain }/v1/reports/${ report }?format=json&fd=yes&employeeStatusFilter=active`;
+
+    const options = {
+        auth: `${ bambooToken }:x`,
+    };
+    const result = await http.get(url, options);
+
+    // logger.log(result);
+
+    const content = JSON.parse(result.content || '');
+
+    const birthdays = [];
+
+    if (!content.employees) {
+        return { birthdays };
+    }
+
+    return {
+        birthdays: content.employees
+            .filter(({ birthday }) => birthday === todayString)
+            .map(({ preferredName, firstName, lastName }) => preferredName || `${ firstName } ${ lastName }`),
+    };
+}
+
 export async function getWhosOut({ today, http, bambooSubdomain, bambooToken, logger }: IWhosOutParams): Promise<{ whosout: Array<string>, holidaysToday: Array<string>, holidaysTomorrow: Array<string> }> {
     const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
 
@@ -58,6 +87,8 @@ export async function getWhosOut({ today, http, bambooSubdomain, bambooToken, lo
         auth: `${ bambooToken }:x`,
     };
     const result = await http.get(url, options);
+
+    // logger.log(result);
 
     const content = result.content as string;
 

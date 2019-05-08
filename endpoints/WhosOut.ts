@@ -5,7 +5,7 @@ import { IApiEndpointInfo } from '@rocket.chat/apps-engine/definition/api/IApiEn
 import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
 // import { IUser } from '@rocket.chat/apps-engine/definition/users';
 
-import { getWhosOut } from '../BambooHR';
+import { getBirthdays, getWhosOut } from '../BambooHR';
 import { AppSetting } from '../settings';
 
 import { IMessageAttachmentField } from '@rocket.chat/apps-engine/definition/messages/IMessageAttachmentField';
@@ -28,11 +28,19 @@ export class WhosOutEndpoint extends ApiEndpoint {
         const messageBuilder = await modify.getCreator().startMessage()
             .setSender(sender)
             .setRoom(room)
-            .setUsernameAlias('Who\'s Out')
+            .setUsernameAlias('BambooHR')
             .setEmojiAvatar(':date:');
 
         const today = new Date();
         const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+        const { birthdays } = await getBirthdays({
+            today,
+            bambooToken,
+            bambooSubdomain,
+            http,
+            logger: this.app.getLogger(),
+        });
 
         const { whosout, holidaysToday, holidaysTomorrow } = await getWhosOut({
             today,
@@ -64,6 +72,14 @@ export class WhosOutEndpoint extends ApiEndpoint {
             fields.push({
                 title: `Holidays tomorrow (${ formatDate(tomorrow) }):`,
                 value: holidaysTomorrow.join('\n'),
+                short: true,
+            });
+        }
+
+        if (birthdays.length > 0) {
+            fields.push({
+                title: 'Birthday 🎂',
+                value: birthdays.join('\n'),
                 short: true,
             });
         }
